@@ -1,0 +1,65 @@
+BREAK=ON
+DOS=HIGH,UMB
+FILES=40
+BUFFERS=40
+LASTDRIVE=Z
+STACKS=9,256
+
+[menu]
+menuitem=Q4DWS, 4dos WS QEMM + EMS
+menuitem=M4DWS, 4dos WS EMM386 + EMS
+menuitem=MDWS, DOS WS EMM386 + XMS
+menuitem=XMC, DOS Extended Memory + Mouse + CD-ROM
+menuitem=CMC, DOS Conventional Memory + Mouse + CD-ROM
+rem menuitem=WIN, Windows 3.11 + Mouse + CD-ROM
+
+menudefault=Q4DWS,10
+
+[Q4DWS]
+
+        DEVICE          =C:\QEMM\DOSDATA.SYS
+        DEVICE          =C:\QEMM\QEMM386.SYS x=b000-b0ff r:0 RAM
+        DEVICE          =C:\QEMM\DOS-UP.SYS @C:\QEMM\DOS-UP.DAT
+        DEVICE          =C:\QEMM\LOADHI.SYS C:\DOS\ANSI.SYS
+        DEVICE          =C:\QEMM\LOADHI.SYS /R:2 /RES=5024 /SQF /SIZE=11584 C:\DOS\VIDECDD.SYS /D:SHSU001
+        SHELL           =C:\4DOS\4DOS.COM
+
+[M4DWS]
+
+        DEVICE          =C:\DOS\HIMEM.SYS /TESTMEM:OFF /SHADOWRAM:ON /A20CONTROL:ON /V
+REM        DEVICE          =C:\DOS\EMM386.EXE HIGHSCAN RAM /MIN=0 I=B000-B7FF /V
+        DEVICE          =C:\DOS\EMM386.EXE NOEMS /V
+        DEVICEHIGH /L:1 =C:\DOS\ANSI.SYS
+        DEVICEHIGH /L:1 =C:\DOS\VIDECDD.SYS /D:SHSU001
+        SHELL           =C:\4DOS\4DOS.COM
+
+[MDWS]
+
+        DEVICE          =C:\DOS\HIMEM.SYS /TESTMEM:OFF /SHADOWRAM:ON /A20CONTROL:ON /V
+        DEVICE          =C:\DOS\EMM386.EXE NOEMS /V
+        DEVICEHIGH /L:1 =C:\DOS\ANSI.SYS
+        DEVICEHIGH /L:1 =C:\DOS\VIDECDD.SYS /D:SHSU001
+        SHELL           =C:\DOS\COMMAND.COM C:\DOS\ /E:1024 /P
+
+[XMC]
+
+        DEVICE          =C:\DOS\HIMEM.SYS /TESTMEM:OFF
+        DEVICE          =C:\DOS\EMM386.EXE NOEMS /V
+        DEVICEHIGH /L:1 =C:\DOS\ANSI.SYS
+        DEVICEHIGH /L:1 =C:\DOS\VIDECDD.SYS /D:SHSU001
+        SHELL           =C:\DOS\COMMAND.COM C:\DOS\ /E:1024 /P
+
+
+[CMC]
+
+        DEVICE          =C:\DOS\VIDECDD.SYS /D:SHSU001
+        SHELL           =C:\DOS\COMMAND.COM C:\DOS\ /E:1024 /P
+
+rem [WIN]
+rem        DEVICE          =C:\DOS\HIMEM.SYS
+rem        DEVICE          =C:\DOS\EMM386.EXE
+rem        SHELL           =C:\DOS\COMMAND.COM C:\DOS\ /E:1024 /P
+rem        DEVICE          =C:\WINDOWS\SMARTDRV.EXE /DOUBLE_BUFFER
+rem        DEVICEHIGH      =C:\WINDOWS\IFSHLP.SYS
+rem        STACKS          =9,256
+
