@@ -1,0 +1,243 @@
+:-------------------------------------------------------------------------------
+:                       LAN - Novell 3.1x
+:-------------------------------------------------------------------------------
+
+: LOGIN - searches for preferred server, logs you IN to the network, redirects
+: the environment variables. If you are not in the root shell displays the
+: appropriate error message.
+
+li=
+iff exist c:\config.sys then^
+ call se login %&^
+else^
+ %@Alias[D_sLD]\login.exe %& /NB^
+ iff exist c:\config.sys then^
+  call se^
+ endiff^
+endiff^
+setPrompt
+
+logi*n.exe   li
+
+: Logs supervisor to the preferred server
+
+ls      li supervisor
+
+: LOGOUT - Checks the presents of the LAN, logs you OUT of the network,
+: redirects the environment variables. If you are not in the root shell
+: displays the appropriate error message.
+
+I_logOut=
+iff exist c:\config.sys then^
+ call se logout %&^
+else^
+ I_cayli then^
+  %@Alias[D_sLD]\logout.exe %&^
+ endiff^
+ if exist c:\config.sys call se^
+endiff
+
+lo=
+iff "%_Shell"=="0" then^
+ I_logOut %&^
+else^
+ M_yanirh^
+endiff^
+if exist c:\config.sys cdd c:.\^
+setPrompt
+
+logo*ut.exe  lo
+
+: Novell NetWare's MAP utility
+
+map=
+I_cilp^
+ iff %# == 0 then^
+  set _I_Path=%path^
+  set path=^
+  %@Alias[D_sLD]\map.exe^
+  set path=%_I_Path^
+  echo PATH=%path^
+  echo LanDrive=%I_LanDrive^
+  if "%I_RamDrive" NE "_No" echo RamDrive=%I_RamDrive^
+  echo -----------^
+  echos `SUBSTs: `^
+  nwu asd:_^
+  set _I_Path=^
+ else^
+  %@Alias[D_sLD]\map.exe %&^
+ endiff^
+else^
+ M_tinlp^
+ echos `SUBSTs: `^
+ nwu asd:_^
+endiff^
+set LIP=
+
+: Call RCONSOLE
+
+rcon=
+I_cayli then^
+ I_in %I_LanPublic rconsole.exe^
+else^
+ M_yanli^
+endiff
+
+:-------------------------------------------------------------------------------
+:                       PRINT
+:-------------------------------------------------------------------------------
+
+: End of captures of the LAN printers.
+
+ce=
+I_cayli then^
+ I_cipp %I_LanPublic\endcap.exe /all^
+endiff
+
+I_capPrn=
+I_cayli then^
+ I_cipp %I_LanPublic%\capture.exe /S=%1 /Q=%2 /L=1 /NB /NFF /NNOTI /AU /C=1 /TI=5^
+else^
+ M_yanli^
+endiff
+
+: Printer Queue Names
+
+: In APS
+: P_qPQN1 LQ-1070
+: P_qPQN2 HP4MPLUS
+: P_qPQN3 EPSON-8000
+
+: In ISD
+: P_qPQN1 PQ_EPSON_RMT
+: P_qPQN2 PQ_HP_SRV
+
+P_qPQN1 LQ-1070
+P_qPQN2 HP4MPLUS
+P_qPQN3 EPSON-8000
+
+: Print Server Names
+
+ P_sPSN1 PS-APS
+:P_sPSN2 PS-APSARC
+:P_sPSN3 PS-APSARC1
+
+: File servers, containing Print Servers Names
+
+ P_sFPSN1 %@Alias[C_sPrfSN]
+:P_sFPSN2 APSARC
+:P_sFPSN3 APSARC1
+
+: Capture commands
+
+clq      I_capPrn %@Alias[P_sFPSN1] %@Alias[P_qPQN1]
+ch       I_capPrn %@Alias[P_sFPSN1] %@Alias[P_qPQN2]
+ce8      I_capPrn %@Alias[P_sFPSN1] %@Alias[P_qPQN3]
+
+: NETPRINT to the appropriate printer
+
+I_netPrint=
+I_cayli then^
+ I_cipp %I_LanPublic\nprint.exe %4& /NoB /NoFF /NoNoti /NoTabs /PS=%1 /Q=%2 /S=%3^
+else^
+ M_yanli^
+endiff
+
+nplq    I_netPrint %@Alias[P_sPSN1] %@Alias[P_qPQN1] %@Alias[P_sFPSN1]
+nph     I_netPrint %@Alias[P_sPSN1] %@Alias[P_qPQN2] %@Alias[P_sFPSN1]
+npe8    I_netPrint %@Alias[P_sPSN1] %@Alias[P_qPQN3] %@Alias[P_sFPSN1]
+
+: Call PCONSOLE
+
+pc=
+I_cayli then^
+ I_in %I_LanPublic pconsole.exe^
+else^
+ M_yanli^
+endiff
+
+:-------------------------------------------------------------------------------
+:                       HELP
+:-------------------------------------------------------------------------------
+
+: Novell NetWare help
+
+nHelp   I_cayli then^I_in %I_LanPublic .\help %&^else^M_yanli^endiff
+
+:-------------------------------------------------------------------------------
+:                       COPY
+:-------------------------------------------------------------------------------
+
+: Net copy
+
+n       I_cayli then^I_cipp %@Alias[D_sLD]\ncopy.exe %&^else^M_yanli^endiff
+
+:-------------------------------------------------------------------------------
+:                       VIEW
+:-------------------------------------------------------------------------------
+
+: Let's see the version of NetWare file
+
+vr      version
+
+: List all of the currently mapped network drives
+
+mp      I_cilp^%@Alias[D_sLD]\map.exe|mo^else^M_tinlp^endiff^set LIP=
+
+: Who Am I
+
+wai     I_cayli then^I_cipp %@Alias[D_sLD]\whoami.exe |mo^else^M_yanli^endiff
+
+: Userlist
+
+ul      I_cayli then^I_cipp %I_LanPublic\userlist.exe %&^else^M_yanli^endiff
+ula     ul /a */*
+
+:-------------------------------------------------------------------------------
+:                       INTERNAL
+:-------------------------------------------------------------------------------
+
+: Is Lan Present. Checks for LAN presentation. If LAN is OK,
+: then sets LIP (Lan Is Pressent) to "Yes", otherwise to "No"
+
+I_ilp c:\tools\nwu ilp Yes No|set LIP=%@Line[CON,0]
+
+: Check Is Lan Present
+
+I_cilp   I_ilp^iff "%LIP"=="Yes" then
+
+:-------------------------------------------------------------------------------
+:                       Preferred directory settings
+:-------------------------------------------------------------------------------
+
+: Directory of network programs
+
+D_sLD     C:\LAN
+
+: You have to overwrite this alias in the local aliases (use EL) so the alias
+: LI will change the current directories on all of the mapped drives.
+
+D_chLAN   C:.
+
+I_chd     for _I_for in (%@Alias[D_chLAN]) if direxist %_I_for cd %_I_for^set _I_for=
+
+:-------------------------------------------------------------------------------
+:                       MAIL
+:-------------------------------------------------------------------------------
+
+: First Mail - sample electronic mail provided from Novell 3.12
+: mail    m:\public\mail.exe
+
+: Send a message to the selected user
+@@F2    se send
+
+:-------------------------------------------------------------------------------
+:                       MESSAGES
+:-------------------------------------------------------------------------------
+
+: The name of the alias is constructed from the first letters
+: of the message's words
+
+M_tinlp    set _I_msg1=There is NO LAN present !^set _I_msg2=ç• ±† ß†∞•§•≠® §∞†©¢•∞® ß† ¨∞•¶† !^I_cLm
+M_tinps    set _I_msg1=There is NO PREFERRED server !^set _I_msg2=ç• • ≥™†ß†≠ Ø∞•§ØÆ∑®≤†≠ ±∫∞¢•∞ !^I_cLm
+M_yanli    set _I_msg1=You are NOT logged in to the LAN !^set _I_msg2=ç• ±≤• ±• 'LOG'-≠†´ ¢ ¨∞•¶†≤†!^I_cLm

@@ -1,0 +1,112 @@
+:-------------------------------------------------------------------------------
+:                       Configuration settings
+:-------------------------------------------------------------------------------
+
+: Set Preferred Server Name. For NW 3.1x servers
+
+C_sPrfSN    YOUTH_1
+
+: Set Preferred Name Context. For NW 4.xx servers
+
+C_sPrfCN    .main
+
+: Set Display Messages. Possible Values :
+:     T - True  - Display all of the messages
+:     F - False - Don`t display messages
+
+C_sDM       T
+
+: Set Answering to the Questions. Possible Values :
+:     T - True  - Wait for the answer
+:     F - False - Don`t wait for the answer
+
+C_sAQ       T
+
+: Set Edit Login name. Possible Values :
+:     T - True  - You can edit
+:     F - False - You can't edit
+
+C_sELN      T
+
+: Set Language of Messages. Possible Values :
+:     Eng - English
+:     Bul - Bulgarian
+
+C_sLM       Eng
+
+: Set Monitor Type. Possible Values :
+:     Color
+:     Mono
+
+C_sMT       Color
+
+: Set Network Type. Possible Values :
+:     N311  - for Novell 3.1x
+:     N4xx  - for Novell 4.xx
+:     None  - no LAN, no fun
+
+C_sNT       N4xx
+
+: Set Booting Type. Possible values :
+:     HDD - from hard disk
+:     ROM - with BOOTROM from the server
+
+C_sBT       HDD
+
+: Set Run BackEnv alias - to collect work station configurations.
+: Possible values :
+:     T - True  - Run
+:     F - False - Don`t run
+
+C_sRBE      F
+
+: Set Minimum Free Space for Temp directory - in kilobytes
+: Possible values :
+:     0 .. maxlong
+
+C_sMFST     8000
+
+: Set Minimum Free Space for OBJ directory - in kilobytes
+: Possible values :
+:     0 .. maxlong
+
+C_sMFSO     4096
+
+
+: Stop on errorlevel on exit from dos shell ?
+: Possible values :
+:     T - Stop
+:     F - Do not stop
+
+C_sSOERR     F
+
+
+: Set Prompt Type. Possible Values :
+:     O - Old   - Old style prompt
+:     L - Long  - The full, "True name" of the path will be shown.
+:     S - Short - Shortest prompt
+
+C_sPT=S
+
+
+:-------------------------------------------------------------------------------
+:                       Loading aliases sets
+:-------------------------------------------------------------------------------
+
+:     Load aliases sets. Different names are added to the variable _I_LoAli.
+: These names are names of the aliases without extension .ALI. You can add
+: any kind of your own aliases sets. Separate names with commas.
+:     Possible values to include in the variable in this version are :
+:
+:     BC       - Borland C
+:     BP       - Borland Pascal
+:     Clip52   - CA Clipper 5.2
+:     Clip4Win - Clipper for windows         \ you can use only ONE of those
+:     FiveWin  - another Clipper for windows / libraries - not both of them !
+:     MSC      - MS C compiler
+:     QPRO     - Borland's Quattro Pro
+:     Text     - Text editor
+:     Win      - MS Windows
+:     Word     - MS Word
+
+I_LoadAli set _I_LoAli=Clip52,BC,Word,Win

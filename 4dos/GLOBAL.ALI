@@ -1,0 +1,911 @@
+:-------------------------------------------------------------------------------
+:                       MISCELLANEOUS
+:-------------------------------------------------------------------------------
+
+command*.com   %comspec%
+cmd            c:\command.com
+trace          setdos /Y1^%&
+logcmd         log --- Begin ---^log on^%&^log off^log --- End ---^s c:\4dos\4doslog.log
+
+:    The basic user drive. It's important to set correct value so the
+: algorithm of setting the environment will work properly.
+:    For example
+:          D_sUserD  G:\USERS\USER1
+
+D_sUserD  U:
+
+: Dummy LOGOUT alias.
+
+lo    rem
+
+: Dummy CaptureEnd alias.
+
+ce    rem
+
+: Set PROMPT
+
+I_exec        %&^echos [1A[K[1A
+
+I_Prompt=
+set DRVT=$e[0;1;37;40m
+%@if[%@CdRom[%_disk]==1,
+     CDR,
+     %@if[%@Remote[%_disk]==1,
+          LAN,
+          %@if["%@Label[%_disk]"=="MS-RAMDRIVE",
+               RAM,
+               %@if[%@Removable[%_disk]==1,
+                    FDD,
+                    HDD
+                   ]
+              ]%@if[%@TrueName[%_disk:\]==%_disk:\,, S]
+         ]
+    ]
+%@if[%_win==0,, W]
+%@if[%_dv==0,, D]
+$e[0;37m
+%@if[%@Alias[C_sPT]==L,
+     $s$c%@TrueName[%_disk:\]$f
+     ,
+    ]
+$s
+
+I_changePrompt=
+iff     "%@Alias[C_sPT]"=="O" then^
+ @I_exec Alias C_sPT=S^
+elseiff "%@Alias[C_sPT]"=="S" then^
+ @I_exec Alias C_sPT=L^
+else^
+ @I_exec Alias C_sPT=O^
+endiff^
+setPrompt
+
+setPrompt=
+iff %@Alias[C_sMT]==Color then^
+  set _I_PC=$e[1;32;40m^
+else^
+  set _I_PC=$e[1;37;40m^
+endiff^
+iff "%@Alias[C_sPT]"=="O" then^
+  prompt=`%shl%%winsh%%_I_PC%$P$g$e[0;37m`^
+else^
+  prompt=`%@Exec[I_Prompt]$h%shl%%drvt%%_I_PC%$P$g$e[0;37m`^
+endiff
+
+: Reboot the computer
+
+rb=
+iff "%_SHELL"=="0" then^
+ M_contyn M_aysywr^
+ iff "%@Upper[%_I_ans]"=="Y" then^
+  set _I_LogOut=F^
+  lo^
+  M_reboot^
+  if exist c:\config.sys sm /C^
+  set ?=0^
+  reboot^
+ endiff^
+ set _I_ans=^
+else^
+ M_yanirh^
+endiff
+
+: Find SHUT.COM
+
+I_fs=
+set _I_shut=^
+if exist %I_LanDrive\login\shut.com set _I_shut=%I_LanDrive\login\shut.com^
+if exist c:\tools\shut.com set _I_shut=c:\tools\shut.com
+
+: Shut down the system
+
+I_shut=
+I_fs^
+iff "%_I_shut" NE "" then^
+ %_I_shut %@Alias[C_sLM]^
+ set _I_shut=^
+ set _I_LogOut=^
+endiff
+
+: Shuts down the system - logout, flush smartdrive's buffers, park disk heads.
+
+shut=
+iff "%_SHELL"=="0" then^
+M_contyn M_aysyws^
+iff "%@Upper[%_I_ans]"=="Y" then^
+ set _I_LogOut=F^
+ lo^
+ if exist c:\config.sys sm /C^
+ I_shut^
+ se^
+endiff^
+set _I_ans=^
+else^
+M_yanirh^
+endiff
+
+UNKNOWN_CMD=
+iff "%#"=="0" then^
+ M_ntd^
+else^
+ iff "%#"=="1" .and. isdir %1 then^
+  cdd %1^
+ else^
+  M_bcofn %&^
+ endiff^
+endiff
+
+: Save configuration
+
+D_sBEnvD %I_LanDrive%\COMMON\BACKENV
+: D_sBEnvD S:\BACKENV
+
+I_CPBE=
+pushd^
+iff exist c:\%1\%2 then^
+ I_crcdd %1^
+ copy c:\%1\%2 /u>& nul^
+endiff^
+popd
+
+I_RunSI=
+if not exist c:\4dos\start-si.cmd echo _I_STOP>c:\4dos\start-si.cmd^
+set _I_RunSI=%@Line[c:\4dos\start-si.cmd,0]^
+iff "%_I_RunSI" NE "_I_STOP" then^
+ M_genSI^
+ ver /r>u:\env-si.dat^
+ if exist c:\tools\xdir.exe c:\tools\xdir.exe c:\mfs\*.exe /c>>& u:\env-si.dat^
+ c:\tools\mft.exe * *>>u:\env-si.dat^
+ c:\tools\mft.exe * * /a>>u:\env-si.dat^
+ dir c:\*.* /s>>u:\env-si.dat^
+ echo _I_STOP>c:\4dos\start-si.cmd^
+endiff^
+set _I_RunSI=
+
+I_GetLogS=
+c:\tools\nwu ui|set _I_UID=%@Word[0,%@Line[CON,0]]^
+iff exist %I_LanDrive%\mail\%_I_UID\login then^
+ if not direxist mail md mail>& nul^
+ copy %I_LanDrive%\mail\%_I_UID\login mail>& nul^
+endiff^
+set _I_UID=
+
+I_copyBE=
+copy c:\config.sys c:\*.?at .>& nul^
+if exist image.dat del image.dat>& nul^
+copy u:\env-si.dat>& nul^
+del u:\env-si.dat>& nul^
+copy c:\net.cfg;shell.cfg;pathcfg.dbf;paths.dbf /squ>&nul^
+I_CPBE 4dos local*.ali^
+I_CPBE 4dos hardcfg.ali^
+I_CPBE tools setenvlo.btm^
+I_CPBE tools lan.bat^
+I_CPBE fsd *.?at^
+I_CPBE bms *.?at^
+I_CPBE argo *.bat^
+I_CPBE argolink *.bat^
+I_CPBE tape *.bat^
+I_CPBE comm *.bat^
+del (C)APS.DEL/sx>&nul
+
+backEnv=
+pushd^
+I_cayli then^
+ I_crcdd %@Alias[D_sBEnvD]\%@Label[C:]^
+ iff "%_I_NR%"=="F" then^
+  I_RunSI^
+  I_GetLogS^
+  I_copyBE^
+ endiff^
+ set _I_NR=^
+endiff^
+popd
+
+: Update configuration
+
+:D_sEnvD %I_LanDrive%\ENV
+D_sEnvD  F:\ENV
+
+updSET=
+iff direxist %@Alias[D_sEnvD]\all\set .and. direxist %@Alias[D_sUserD]\set then^
+ copy %@Alias[D_sEnvD]\all\set %@Alias[D_sUserD]\set /squ >&> nul^
+endiff^
+iff direxist %@Alias[D_sEnvD]\%@Label[C:]\set .and. direxist %@Alias[D_sUserD]\set then^
+ copy %@Alias[D_sEnvD]\%@Label[C:]\set %@Alias[D_sUserD]\set /squ >&> nul^
+endiff
+
+I_updGrp=
+iff exist %@Alias[D_sEnvD]\I_config\*.* then^
+ for %%i in (%@Alias[D_sEnvD]\I_config\*.*) do 
+  for %%l in (@%%i) do 
+   if "%@Upper[%%l]"=="%@Upper[%@Label[C:]]" 
+    copy %@Alias[D_sEnvD]\%@FileName[%%i]\*.* c:\ /squ >&> nul^
+endiff
+
+updConf=
+I_cayli then^
+ M_upd^
+ copy %@Alias[D_sEnvD]\all\*.* c:\ /squ >&> nul^
+ I_updGrp^
+ copy %@Alias[D_sEnvD]\%@Label[C:]\*.* c:\ /squ >&> nul^
+ updSET^
+ iff exist c:\4dos\updexec.bat then^
+  call c:\4dos\updexec.bat^
+  echo @rem>c:\4dos\updexec.bat^
+ endiff^
+ if "%@Alias[C_sRBE]"=="T" backEnv^
+endiff
+
+: MENU.BAT directory
+
+D_cdM   C:\MFS
+
+menu=
+iff exist %@Alias[D_cdM]\menu.bat then^
+ cdd %@Alias[D_cdM]^
+ call menu.bat^
+else^
+ M_cfmb^
+endiff
+
+: Bye
+
+bye     lo^cdd c:\^clr^history /f^nc
+
+: Quick format
+
+I_QFA   e:\windows\system32\format.com %1/q/u/v:"%@Label[C:]"
+qfa     I_QFA a:
+qfb     I_QFA b:
+: Stupid FDF does not understand spaces in labels even in commas
+fmt     c:\tools\fdf.exe a: /X:2 /Y:3 /U /V:%@Replace[-,_,%@Replace[ ,_,%@Label[C:]]] %1&
+
+a       attrib
+ti      timer on^%&^timer
+
+: Calls antivirus set of programs
+
+av      I_in c:\av avir.bat %&
+
+: Calculates sample numeric expressions
+
+cal*c   echo The answer is: %@eval[%&]
+
+clr     e:\windows\system32\mode co80
+mono    e:\windows\system32\mode mono
+
+: Kill directory
+
+kd      del %1/y^rd %1^echo.
+kdd     del %1/szx^echo.
+
+: New directory
+
+nd      md %1 /s^cdd %1
+
+lf      e:\windows\system32\loadfix
+
+: Run the selected executable program
+
+I_runSel=
+iff not exist %1 then^
+ M_snsf %1^
+else^
+ dir %1 /KM|Set _I_View=%@Word[0,%@Select[CON,0,36,16,77,( %1 )]]^
+ iff not "%_I_View%"=="" then^
+  %_I_View^
+  set _I_View=^
+ endiff^
+endiff
+
+r       I_runSel *.com;*.exe;*.bat;*.btm
+:v      I_runSel *.vew
+altf    I_runSel *.dbf
+
+: Go to the specified directory
+
+seldir=
+set _I_DSel=^
+I_cayli .and. "%WHOAMI%" NE "%@Label[C:]" then^
+ if exist %@Alias[D_sUserD]\set\dirs.sel set _I_DSel=%@Alias[D_sUserD]\set\dirs.sel^
+else^
+ iff "%WHOAMI%" NE "SUPERVISOR" .and. exist c:\set\dirs.sel then^
+  set _I_DSel=c:\set\dirs.sel^
+ endiff^
+endiff^
+I_JumpToDir %_I_DSel^
+set _I_DSel=
+
+
+I_JumpToDir=^
+iff "%1"=="" then^
+ M_snsf^
+else^
+ set _I_GoDir=%@Select[%1,0,36,12,77, %1 ]^
+ iff not dirExist %_I_GoDir then^
+  if "%_I_GoDir" NE "" M_tinlwd %_I_GoDir^
+ else^
+  cdd %_I_GoDir^
+ endiff^
+ set _I_GoDir=^
+endiff
+
+: Delete selected files
+
+sDel=
+iff %#==0 then^
+ select /Oeg del (*.*)^
+else^
+ select /Oe del (%1)^
+endiff
+
+: Copy selected files
+
+sCopy=
+iff %#==0 then^
+ echo.^
+ M_ntd^
+ echo.^
+else^
+ select /Oeg copy (%1) /v^
+endiff
+
+: View / Edit list of information, stored in an DBF file.
+
+I_DBFView=
+iff exist %1\%2 then^
+ I_in %1 %2^
+else^
+ echo.^
+ %3^
+endiff
+
+: View /Edit list of telephone numbers
+
+: Phones database directory
+
+:D_sPHD  %I_LanDrive%\COMMON\PHONE
+D_sPHD  S:\PHONE
+
+tel     I_DBFView %@Alias[D_sPHD] phones.vew   M_scftn
+
+telPr   I_DBFView %@Alias[D_sPHD] phonpriv.vew M_scftn
+
+: Abreviations database directory
+
+D_sABRD S:\ABREVIAT
+
+: View /Edit list of abreviations
+
+abr     I_DBFView %@Alias[D_sABRD] abreviat.vew M_scfabr
+
+noecho    set NOECHO=1^%&^unset NOECHO
+
+:-------------------------------------------------------------------------------
+:                       HELP
+:-------------------------------------------------------------------------------
+
+: MS DOS help
+
+D_sDOSHLPD e:\windows\system32
+dHelp   I_in %@Alias[D_sDOSHLPD] .\help %&
+
+: Help files directory
+
+D_sHLPD HELP
+
+: Tech help
+
+th      I_RunPr %@Alias[D_sHLPD] th.exe^clr
+
+: Norton guide
+
+:ng     I_RunPr %@Alias[D_sHLPD] ng.exe
+ng      %clipdir%\ng\ng.exe
+
+: Enhanced help
+
+:eh     I_RunPr %@Alias[D_sHLPD] eh.exe -C -I
+eh      %clipdir%\ng\eh.exe -C -I
+
+: Network Support Encyclopedia
+
+D_sNSED  %I_LanDrive%\NSE-OK
+
+nse=
+set _I_Path=%path^
+set path=%@Alias[D_sNSED];%path%^
+pushd %temp%^
+%@Alias[D_sNSED]\previews %@Alias[D_sNSED]\nseptoc.nfo^
+popd^
+set path=%_I_Path^
+set _I_Path=
+
+:-------------------------------------------------------------------------------
+:                       EDITING
+:-------------------------------------------------------------------------------
+
+e3      c:\tools\e3.exe
+e2      c:\tools\pe2.exe /pc:\tools\pe2.pro
+
+: Default editor
+
+e       c:\tools\q.exe %&
+
+: Edit AUTOEXEC.BAT
+
+ea      e c:\autoexec.bat^M_plRb
+
+: Edit CONFIG.SYS
+
+ec      e c:\config.sys^M_plRb
+
+: Edit ALIASES
+
+eal     e c:\4dos\*.ali^call se aliases
+
+: Edit LOCAL aliases
+
+el      call se edital
+els     el
+
+: Edit SETENV.BTM
+
+ee      e %@Alias[se]^call se
+
+: Edit 4DOS.INI
+
+ei      e c:\4dos\4dos.ini^M_plRb
+
+: Edit 4Start.BTM & 4Exit.BTM
+
+ese     e c:\4dos\4start.BTM c:\4dos\4exit.BTM
+
+: Edit CONFIG.SYS AUTOEXEC.BAT \QEMM\DOS-UP.DAT \QEMM\LOADHI.RF
+
+eop     e c:\config.sys c:\autoexec.bat c:\qemm\dos-up.dat c:\qemm\loadhi.rf^M_plRb
+
+:-------------------------------------------------------------------------------
+:                       COPY
+:-------------------------------------------------------------------------------
+
+c       copy
+m       move /R
+x       e:\windows\system32\xcopy
+xa      e:\windows\system32\xcopy %1 a: /v
+xb      e:\windows\system32\xcopy %1 b: /v
+xf      for %i in (%1) (pause Insert disk to copy %i ...^x %i %2&)
+x12	md %2\1^md %2\2^x %1 %2\1^x %1 %2\2
+
+:-------------------------------------------------------------------------------
+:                       PRODUCTS
+:-------------------------------------------------------------------------------
+
+: File Editor
+fe        c:\tools\filed.exe
+
+: Data base utility
+
+dbu     c:\tools\dbu.exe
+dby     c:\tools\dby.exe /e
+bmv     c:\tools\bmv.exe
+
+: Preferred Disk Sequence - The sequence in witch drives will be searched
+: for products. Fastest drive first, comma separated.
+
+D_dPDS   %I_RamDrive,C:,P:,%I_LanDrive%
+
+
+: Find product
+
+I_FindPr=
+set _I_PD=^
+for %I_Itm in (%@Alias[D_dPDS]) do 
+if "%_I_PD"=="" .and. "%I_Itm" NE "_No" .and. direxist %I_Itm%\%1 set _I_PD=%I_Itm
+
+: Run product
+
+I_RunPr=
+I_FindPr %1^
+iff "%_I_PD"=="" then^
+ %2 %3&^
+else^
+ %_I_PD%\%1\%2 %3&^
+ set _I_PD=^
+endiff
+
+: APIS
+D_sAPISD  APIS
+
+apis=
+I_FindPr %@Alias[D_sAPISD]^
+iff "%_I_PD"=="" then^
+ apis.exe^
+else^
+ pushd %_I_PD\%@Alias[D_sAPISD]^
+ apis.exe^
+ popd^
+ set _I_PD=^
+endiff
+
+: Norton commander
+
+D_sNCD  NC
+nc     I_RunPr %@Alias[D_sNCD] nc.exe
+
+: Check File Type - in environment variable _I_FT you will receive the type.
+: Possible types:
+:       U - Unknown
+:       W - MS Word for DOS
+:       E - .EXE or .COM
+:       Z - some archive type, known to AVIEW.EXE (ARC,ARJ,HYP,LHA,PAK,RAR,SQZ,UC2,ZIP,ZOO)
+
+I_cftZIP for %I_Itm in (ARJ,ZIP) do if "%@Ext[%1]"=="%I_Itm" set _I_RAV=T
+I_cftEXE for %I_Itm in (EXE,COM,DLL) do if "%@Ext[%1]"=="%I_Itm" set _I_RAV=T
+I_cftDOC=
+set _I_FH=%@FileOpen[%1,read,b]^
+iff "%_I_FH" NE "-1" then^
+ set _I_BD=%@FileRead[%_I_FH, 2]^
+ if "%_I_BD"=="1╛" set _I_RAV=T^
+ set _I_BD=%@FileClose[%_I_FH]^
+ set _I_BD=^
+endiff^
+set _I_FH=
+
+I_cft=
+set _I_FT=U^
+I_cftZIP %1^
+iff "%_I_RAV"=="T" then^
+ set _I_FT=Z^
+else^
+ I_cftEXE %1^
+ iff "%_I_RAV"=="T" then^
+  set _I_FT=E^
+ else^
+  iff "%@Ext[%1]"=="DOC" then^
+   I_cftDOC %1^
+   iff "%_I_RAV"=="T" then^
+    set _I_FT=W^
+   endiff^
+  endiff^
+ endiff^
+endiff
+
+: This is a special alias for NC to run AVIEW over zips. You have to configure
+: NC to work with external editor EV !.!
+
+ev=
+set _I_RAV=F^
+I_cft %1^
+iff "%_I_FT"=="W" then^
+ word %1^
+elseiff "%_I_FT"=="Z" then^
+ zv %&^
+elseiff "%_I_FT"=="E" then^
+ hv %&^
+else ^
+ e %&^
+endiff^
+set _I_FT=^
+set _I_RAV=
+
+: Symantec's Norton Utilities
+
+D_sNUD  NU
+
+: DiskReet
+
+dr=
+set _I_nu=%nu%^
+set nu=e:\windows\system32\sys^
+I_RunPr %@Alias[D_sNUD] diskreet.exe %&^
+set nu=%_I_nu%^
+set _I_nu=
+
+: Central Point PC Tools
+
+D_sP8D  P8
+
+: MultiEdit
+
+D_sMED  ME
+me      I_RunPr %@Alias[D_sMED] me.exe
+
+: Norton desktop for DOS
+
+D_sNDTD ND
+ndt     I_RunPr %@Alias[D_sNDTD] nd.exe
+
+sm=
+iff exist e:\windows\system32\sys\smartdrv.exe then^
+ e:\windows\system32\sys\smartdrv.exe %&^
+else^
+ I_cipp e:\windows\system32\smartdrv.exe %&^
+endiff
+
+arj     c:\tools\arj.exe
+ta      arj t
+ua      arj x
+
+jar     c:\tools\jar%@if[%_win GE 40,32,16].exe
+tj      jar t
+uj      jar x
+
+z       c:\tools\pkzip.exe
+zx      z -ex
+zf      z -es
+zs      z -r -P
+zsx     zs -ex
+zsf     zs -es
+uz      c:\tools\pkunzip.exe -d
+tz      uz -t
+
+lg      I_RunPr %@Alias[D_sNCD] lgaview.exe
+g       lg
+zv      I_RunPr %@Alias[D_sNCD] aview.exe %& /C%nu%\aview.ctl
+
+:-------------------------------------------------------------------------------
+:                       DIRECTORY CHANGE
+:-------------------------------------------------------------------------------
+
+-       iff %#==0 then^cd..^else^cd..\%1^endiff
+
+: Go to the previous current directory (no matter where it is).
+
+.       cdd -
+
+: Your WORK directory
+
+D_sWRKD C:\WORK
+w       cdd %@Alias[D_sWRKD]
+
+:-------------------------------------------------------------------------------
+:                       PRINT
+:-------------------------------------------------------------------------------
+
+: Capture of LPT1. All of the output will flow to %temp%\PRINTER.TXT
+: cap /u will unload the capture
+
+cap=
+iff %#==0 then^
+ lh @c:\tools\prn2file.com %temp%\printer.txt^
+else^
+ lh @c:\tools\prn2file.com /u^
+endiff
+
+:-------------------------------------------------------------------------------
+:                       DIR
+:-------------------------------------------------------------------------------
+
+: Display attributes, files sorted by extension, make pause between screens.
+
+d       dir/AOe/PT
+
+: Too columns display
+
+d2      d/2V
+
+: dir A:
+
+da      d a:%&
+
+: dir B:
+
+db      d b:%&
+
+: dir unsorted
+
+di      dir/A/Ou/PT
+
+: Wide display
+
+dw      dir/A/Ou/4PV
+
+: Dir only subdirs
+
+dx *dir /mad
+
+: Output for comparison
+
+dj      dir/AOge/HJST
+
+: Dir all of the executable files in the directory.
+
+p       dir/A/On/BPT *.com;*.exe;*.bat;*.btm
+
+: View LFN
+
+lfn     doslfnbk %@if["%1"=="" .or. "%@left[1,%1]"=="/",.,] %& /all /f %temp%\lfn^doslfnbk /l /v /f %temp%\lfn|mo^del %temp%\lfn.*/q
+
+:-------------------------------------------------------------------------------
+:                       VIEW
+:-------------------------------------------------------------------------------
+
+: Let's see currently active aliases
+
+al      alias %&|e:\windows\system32\sort|mo
+
+: Let's see current status of the environment variables
+
+en      set|e:\windows\system32\sort|mo
+
+l       s
+
+: Let's see currently installed TSR programs.
+
+mem=
+iff %#==0 then^
+  c:\dos\mem.exe /c|mo^
+else^
+  c:\dos\mem.exe %&|mo^
+endiff
+
+: More detailed list of memory
+
+mm      c:\tools\mm.com %&|mo
+fi      c:\tools\fi.com %&|mo
+
+: Replaces DOS's MORE
+
+mo*re   s /s
+
+: File viewer
+
+s       c:\tools\list.com
+hv      c:\tools\hiew.exe
+v       I_RunPr %@Alias[D_sNCD] view.bat %&
+clog    s c:\temp\log.log
+nv      I_RunPr %@Alias[D_sNDTD] view.exe
+wp      I_RunPr %@Alias[D_sNCD] wpview.exe %&
+dbv     I_RunPr %@Alias[D_sNCD] dbview.exe %&
+
+: File compare
+
+I_co=
+iff %#==1 then^
+ M_ntc^
+else^
+ iff %#==2 then^
+  fc /LB200 %1 %2 r:%2|mo^
+ else^
+  iff exist %3 then^
+   fc /LB200 %1 %2 %3|mo^
+  else^
+   fc /LB200 %1 %2 %3.\%@FileName[%2]|mo^
+  endiff^
+ endiff^
+endiff
+
+:   fc /LB200 %1 %2 %@TrueName[%3.\%@FileName[%2]]|mo^
+
+co      I_co /N
+cob     I_co /B
+
+vc=
+iff "%2"=="" .or. "%@left[1,%2]"=="/" then^set __opt=R: %2&^else set __opt=%2&^endiff^
+for %i in (%1) do c:\tools\vcomp.exe "%i" %__opt^
+unset /q __opt
+
+: Graphics workshop for DOS
+
+D_sGWSD  GWS
+gws      I_RunPr %@Alias[D_sGWSD] gws.exe
+
+:-------------------------------------------------------------------------------
+:                       INTERNAL
+:-------------------------------------------------------------------------------
+
+: Release the saving of the current directory
+
+I_in      pushd %1^%2&^popd
+
+: Release check of presents of the program
+
+I_cipp    if exist %1 %1&
+
+: Check Are You Logged In
+
+I_cayli  iff exist %I_LanPublic%\map.exe
+
+: Who Am I. Sets the environment variable WHOAMI to the your Novell NetWare
+: user name.
+
+I_wai=
+I_cayli .and. "%@Alias[C_sNT]" NE "None" then^
+ iff "%@Alias[C_sNT]"=="N311" .or. "%@Alias[C_sNT]"=="N4xx" then^
+  c:\tools\nwu.exe psun|set UN=%@Word[0,%@Line[CON,0]]^
+  set WHOAMI=%@SubStr[%UN,0,%@if[%@Index[%UN,.]==-1, %@Len[%UN],%@Index[%UN,.]]]^
+  set UN=^
+ endiff^
+ if "%WHOAMI"=="ADMIN" set WHOAMI=SUPERVISOR^
+else^
+ set WHOAMI=^
+endiff
+
+: Create and change directory
+
+I_crcdd=
+set _I_NR=F^
+iff "%1" NE "" then^
+ if not direxist %1 md %1 /s>& nul^
+ iff direxist %1 then^
+  cdd %1^
+ else^
+  M_tinlwd %1^
+  set _I_NR=T^
+ endiff^
+endiff
+
+: Copy local environment to the U:\SET
+
+I_cleCr if not direxist %@Alias[D_sUserD]\set md %@Alias[D_sUserD]\set /s>& nul
+
+I_cle=
+I_cleCr^
+iff direxist %@Alias[D_sUserD]\set then^
+ iff "%@Upper[%1]"=="UPDATE" then^
+  copy c:\4dos\local*.ali %@Alias[D_sUserD]\set /u>& nul^
+  copy c:\set %@Alias[D_sUserD]\set /u>& nul^
+  copy c:\tools\setenvlo.btm %@Alias[D_sUserD]\set /u>& nul^
+ else^
+  e:\windows\system32\replace c:\4dos\local*.ali %@Alias[D_sUserD]\set /a>& nul^
+  e:\windows\system32\replace c:\tools\setenvlo.btm %@Alias[D_sUserD]\set/a >& nul^
+ endiff^
+endiff
+
+:-------------------------------------------------------------------------------
+:                       MESSAGES
+:-------------------------------------------------------------------------------
+
+: The name of the alias is constructed from the first letters
+: of the message's words
+
+I_cLm=
+iff "%@Upper[%@Alias[C_sDM]]"=="T" then^
+ iff "%@Alias[C_sLM]"=="Eng" then^
+  echo n%_I_msg1^
+ else^
+  echo n%_I_msg2^
+ endiff^
+endiff^
+set _I_msg1=^
+set _I_msg2=
+
+M_cfmb   set _I_msg1=Can't find MENU.BAT in %@Alias[D_cdM] directory !^set _I_msg2=Не мога да наме░┐ мен╛▓о в ди░ек▓о░и┐ %@Alias[D_cdM] !^I_cLm
+M_aysywr set _I_msg1=Are you sure you want to REBOOT ?^set _I_msg2=Наи▒▓ина ли и▒ка▓е да РЕСТАРТИРАТЕ комп╛▓║░а ?^I_cLm
+M_aysyws set _I_msg1=Are you sure you want to SHUT DOWN ?^set _I_msg2=Наи▒▓ина ли и▒ка▓е да ЗАГАСИТЕ комп╛▓║░а ?^I_cLm
+M_ntc    set _I_msg1=Nothing to compare !^set _I_msg2=Н┐ма какво да ▒░авн┐вам !^I_cLm
+M_ntd    set _I_msg1=Nothing to do !^set _I_msg2=Н┐мам какво да изв║░╕а !^I_cLm
+M_scftn  set _I_msg1=Sorry, cant find the telephone numbers !^set _I_msg2=С║жал┐вам, не мога да наме░┐ ▓еле┤онни▓е номе░а !^I_cLm
+M_scfabr set _I_msg1=Sorry, cant find the abbreviations !^set _I_msg2=С║жал┐вам, не мога да наме░┐ ▒пи▒║ка на ▒║об╣ени┐▓а !^I_cLm
+M_reboot set _I_msg1=Rebooting ...^set _I_msg2=Ре▒▓а░▓и░ам ...^I_cLm
+M_upd    set _I_msg1=Updating ...^set _I_msg2=Обнов┐ване ...^I_cLm
+M_genSI  set _I_msg1=Generating SysInfo ...^set _I_msg2=Гене░и░ане на SysInfo ...^I_cLm
+M_yanirh set _I_msg1=You are NOT in the ROOT shell !^set _I_msg2=Не ▒▓е в главни┐ DOS !^I_cLm
+M_plRb   set _I_msg1=You have to reboot the computer !^set _I_msg2=Т░┐бва да ░е▒▓а░▓и░а▓е комп╛▓║░а !^I_cLm
+M_tinlwd set _I_msg1=Can't go to the directory "[1;37;40m%1[0;37m" !^set _I_msg2=Не мога да изв║░╕а п░е╡ода к║м ди░ек▓о░и┐ "[1;37;40m%1[0;37m" !^I_cLm
+M_bcofn  set _I_msg1=Unknown command "[1;37;40m%1[0;37m" !^set _I_msg2=Непозна▓а команда "[1;37;40m%1[0;37m" !^I_cLm
+M_snsf   set _I_msg1=Sorry, no "[1;37;40m%1[0;37m" files here !^set _I_msg2=С║жал┐вам, ▓│к н┐ма ┤айлове "[1;37;40m%1[0;37m" !^I_cLm
+: M_bcofn  echo %&>nul^echo nЯ пов▓о░и, ╖е не╣о ▒е бе╡ ░аз▒еал !
+
+
+: NOTE !!! - The fucken 4DOS expands %@Upper[Ш] to Y !
+: Don`t touch this alias !
+
+I_cnvYN=
+iff %@Ascii[%_I_ans]==132 .or. %@Ascii[%_I_ans]==164 then^
+ set _I_ans=Y^
+endiff
+
+M_contyn=
+iff "%@Upper[%@Alias[C_sAQ]]"=="T" then^
+ %1^
+ iff "%@Alias[C_sLM]"=="Eng" then^
+  inkey/C/K"yn[Esc]" nContinue (Y/N) ? : %%_I_ans^
+ else^
+  inkey/C/K"ynднДН[Esc]" nДа п░од║лжа ли (Д/Н) ? : %%_I_ans^
+ endiff^
+ I_cnvYN^
+else^
+ set _I_ans=Y^
+endiff

@@ -1,0 +1,28 @@
+:-------------------------------------------------------------------------------
+:                       BORLAND Pascal
+:-------------------------------------------------------------------------------
+
+: BORLAND Pascal IDE
+
+bp      %bpdir%\bin\bp.exe
+
+: BORLAND Pascal command line compiler
+
+bpc     %bpdir%\bin\bpc.exe
+tpc     %bpdir%\bin\tpc.exe
+
+: BORLAND Pascal THelp
+
+:bph     %bpdir%\bin\thelp /W0,0,80,25
+
+: Borland Pascal directory - the directory where BP files can be found.
+
+D_sBPD BP
+
+: Turbo Pascal directory - the directory where TP files can be found.
+
+D_sTPD  TP7
+
+: Borland's Turbo Pascal
+
+t       I_RunPr %@Alias[D_sTPD]\bin turbo.exe

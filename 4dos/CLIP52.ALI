@@ -1,0 +1,38 @@
+:-------------------------------------------------------------------------------
+:                       CLIPPER 5.2
+:-------------------------------------------------------------------------------
+
+: Version
+
+I_ClipVer 520
+
+: Compiler
+
+clipper %clipdir%\bin\clipper.exe
+
+: Debugger
+
+cld     %clipdir%\bin\cld.exe
+
+: set Debugger Free Memory Size - the minimum amount of free DOS memory to
+: start Clipper debugger
+
+C_sDFMS 600
+
+: Run debugger and immediately start the program
+
+k       iff %@DosMem[k] LT %@Alias[C_sDFMS] then^M_tinem^else^keystack F5^cld %&^endiff
+
+: Maker utility
+
+maker   %clipdir%\bin\maker.exe
+
+: Clipper directory - the directory where Clipper files can be found.
+
+D_sCLPD CLIP52
+
+:-------------------------------------------------------------------------------
+:                       MESSAGES
+:-------------------------------------------------------------------------------
+
+M_tinem   set _I_msg1=There is not enough memory to run CLD !^set _I_msg2=çø¨† §Æ±≤†≤∫∑≠Æ Ø†¨•≤ ß† ±≤†∞≤®∞†≠• ≠† CLD !^I_cLm

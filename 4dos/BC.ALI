@@ -1,0 +1,23 @@
+:-------------------------------------------------------------------------------
+:                       BORLANDC
+:-------------------------------------------------------------------------------
+
+: BORLANDC IDE
+
+bc      %bcdir%\bin\bc.exe
+
+: BORLANDC command line compiler
+
+bcc     %bcdir%\bin\bcc.exe
+
+: Starts BORLANDC IDE with selected PRJ file
+
+b       select /c /o-n bc (*.prj)
+
+: BorlandC THelp
+
+bh      %bcdir%\bin\thelp /W0,0,80,25
+
+: BorlandC directory - the directory where BorlandC files can be found.
+
+D_sBCD  BC

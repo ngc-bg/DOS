@@ -1,0 +1,10 @@
+:-------------------------------------------------------------------------------
+:                       MS Windows aliases
+:-------------------------------------------------------------------------------
+
+: Location of the ROOT of the local WINDOWS directory - for SUBST W:
+D_sLWD  c:\windows
+
+: Location of the ROOT of the local USER directory - for SUBST U:
+D_sLUD  c:\users
+D_dPDS  C:,C:\APPL,P:,%I_LanDrive%
